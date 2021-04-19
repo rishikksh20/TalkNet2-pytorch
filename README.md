@@ -1,5 +1,5 @@
 # TalkNet 2 [WIP]
-TalkNet 2: Non-Autoregressive Depth-Wise Separable Convolutional Model for Speech Synthesis with Explicit Pitch and Duration Prediction.
+[TalkNet 2: Non-Autoregressive Depth-Wise Separable Convolutional Model for Speech Synthesis with Explicit Pitch and Duration Prediction.](https://arxiv.org/abs/2104.08189)
 
 ## Citation
 ```
