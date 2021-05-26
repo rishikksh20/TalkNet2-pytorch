@@ -4,12 +4,12 @@
 <br />Official TalkNet 2 repo [here](https://github.com/NVIDIA/NeMo/blob/main/nemo/collections/tts/models/talknet.py)
 
 ## Work remains:
-- Add masking to all QuartzNet Blocks.
-- Add PostNet to Mel-Spectrogram generator.
-- Clean up and modify all model implementation as per best practices.
-- Add Text and Audio processing code.
-- Add dataloader and training code.
-- Test the whole Talknet2 setup and post result.
+- [ ] Add masking to all QuartzNet Blocks.
+- [ ] Add PostNet to Mel-Spectrogram generator.
+- [ ] Clean up and modify all model implementation as per best practices.
+- [ ] Add Text and Audio processing code.
+- [ ] Add dataloader and training code.
+- [ ] Test the whole Talknet2 setup and post result.
 
 
 ## Citation:
