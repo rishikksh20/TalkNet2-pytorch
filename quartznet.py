@@ -69,13 +69,13 @@ class QuartzNetBlock(nn.Module):
 
 class QuartzNet5x5(nn.Module):
 
-    def __init__(self, idim, odim, qdim=256, kernels=[5, 7, 9, 11, 13], embed_dim=64, padding_idx=0):
+    def __init__(self, idim, odim, qdim=256, kernels=[5, 7, 9, 11, 13], padding_idx=0):
         super(QuartzNet5x5, self).__init__()
 
-        self.embed = nn.Embedding(idim, embedding_dim=embed_dim, padding_idx=padding_idx)
+
 
         self.conv1 = nn.Sequential(
-            ConvBN1d(embed_dim, qdim, 3),
+            ConvBN1d(idim, qdim, 3),
             ConvBN1d(qdim, qdim, 3),
             ConvBN1d(qdim, qdim, 3)
         )
@@ -95,8 +95,7 @@ class QuartzNet5x5(nn.Module):
         )
 
     def forward(self, x):
-        x = self.embed(x)
-        x = self.conv1(x.transpose(1, 2))
+        x = self.conv1(x)
         x = self.quartznet(x)
         x = self.conv2(x)
         x = self.conv3(x)
@@ -104,13 +103,13 @@ class QuartzNet5x5(nn.Module):
 
 class QuartzNet9x5(nn.Module):
 
-    def __init__(self, idim, odim=80, qdim=256, kernels1=[5, 7, 9, 13, 15, 17], kernels2=[21, 23,25], embed_dim=256, padding_idx=0):
+    def __init__(self, idim=256, odim=80, qdim=256, kernels1=[5, 7, 9, 13, 15, 17], kernels2=[21, 23,25]):
         super(QuartzNet9x5, self).__init__()
 
-        self.embed = nn.Embedding(idim, embedding_dim=embed_dim, padding_idx=padding_idx)
+
 
         self.conv1 = nn.Sequential(
-            ConvBN1d(embed_dim, qdim, 3),
+            ConvBN1d(idim, qdim, 3),
             ConvBN1d(qdim, qdim, 3),
             ConvBN1d(qdim, qdim, 3)
         )
@@ -135,8 +134,7 @@ class QuartzNet9x5(nn.Module):
         )
 
     def forward(self, x):
-        x = self.embed(x)
-        x = self.conv1(x.transpose(1, 2))
+        x = self.conv1(x)
         x = self.quartznet(x)
         x = self.conv2(x)
         x = self.conv3(x)

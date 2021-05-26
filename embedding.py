@@ -27,11 +27,11 @@ class GaussianEmbedding(nn.Module):
     EPS = 1e-6
 
     def __init__(
-        self, sigma_c=2.0, merge_blanks=False,
+        self, idim, embed_dim=64, padding_idx=0, sigma_c=2.0, merge_blanks=False,
     ):
         super().__init__()
 
-        self.embed = nn.Embedding(52, 256)
+        self.embed = nn.Embedding(idim, embedding_dim=embed_dim, padding_idx=padding_idx)
         self.pad = 0
         self.sigma_c = sigma_c
         self.merge_blanks = merge_blanks
