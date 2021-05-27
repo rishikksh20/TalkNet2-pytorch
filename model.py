@@ -4,7 +4,7 @@ from torch.nn import functional as F
 from utils import get_mask_from_lengths
 from embedding import GaussianEmbedding
 from quartznet import QuartzNet5x5, QuartzNet9x5
-from module import MaskedInstanceNorm1d, StyleResidual
+from module import MaskedInstanceNorm1d, StyleResidual, Postnet
 
 # Work remains: Apply masking on Conv1d and Postnet
 
@@ -91,13 +91,27 @@ class PitchPredictor(nn.Module):
 
 class TalkNet2(nn.Module):
 
-    def __init__(self, idim, odim=80, embed_dim=256):
+    def __init__(self, idim, odim=80, embed_dim=256, postnet_layers = 0):
         super(TalkNet2, self).__init__()
         self.embed = GaussianEmbedding(idim, embed_dim)
         self.norm_f0 = MaskedInstanceNorm1d(1)
         self.res_f0 = StyleResidual(embed_dim, 1, kernel_size=3)
 
         self.generator = QuartzNet9x5(embed_dim, odim)
+
+        # define postnet
+        self.postnet = (
+            None
+            if postnet_layers == 0
+            else Postnet(
+                odim=odim,
+                n_layers=postnet_layers,
+                n_chans=256,
+                n_filts=5,
+                use_batch_norm=True,
+                dropout_rate=0.5,
+            )
+        )
 
 
     def forward(self, text, durs, f0, is_mask=True):
@@ -110,7 +124,17 @@ class TalkNet2(nn.Module):
             mask = get_mask_from_lengths(x_len)
         else:
             mask = None
-        return self.generator(x, mask)
+
+        before_outs = self.generator(x, mask)
+        if self.postnet is None:
+            return before_outs, None
+        else:
+            after_outs = before_outs + self.postnet(
+                before_outs
+            )
+            return before_outs, after_outs
+
+
 
     @staticmethod
     def _metrics(true_mel, true_mel_len, pred_mel):
