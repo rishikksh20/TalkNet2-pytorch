@@ -5,7 +5,7 @@
 
 ## Work remains:
 - [x] Add masking to all QuartzNet Blocks.
-- [ ] Add PostNet to Mel-Spectrogram generator.
+- [x] Add PostNet to Mel-Spectrogram generator.
 - [ ] Clean up and modify all model implementation as per best practices.
 - [ ] Add Text and Audio processing code.
 - [ ] Add dataloader and training code.
