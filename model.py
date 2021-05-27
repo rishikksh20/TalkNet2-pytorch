@@ -6,7 +6,7 @@ from embedding import GaussianEmbedding
 from quartznet import QuartzNet5x5, QuartzNet9x5
 from module import MaskedInstanceNorm1d, StyleResidual, Postnet
 
-# Work remains: Apply masking on Conv1d and Postnet
+
 
 class GraphemeDuration(nn.Module):
 
