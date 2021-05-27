@@ -16,9 +16,13 @@ class GraphemeDuration(nn.Module):
         self.predictor = QuartzNet5x5(embed_dim, 32)
         self.projection = nn.Conv1d(32, 1, kernel_size=1)
 
-    def forward(self, text, text_len):
+    def forward(self, text, text_len, is_mask=True):
         x, x_len = self.embed(text).transpose(1, 2), text_len
-        out = self.predictor(x)
+        if is_mask:
+            mask = get_mask_from_lengths(x_len)
+        else:
+            mask = None
+        out = self.predictor(x, mask)
         out = self.projection(out).squeeze(1)
 
         return out
@@ -50,9 +54,13 @@ class PitchPredictor(nn.Module):
         self.sil_proj = nn.Conv1d(32, 1, kernel_size=1)
         self.body_proj = nn.Conv1d(32, 1, kernel_size=1)
 
-    def forward(self, text, durs):
+    def forward(self, text, durs, is_mask=True):
         x, x_len = self.embed(text, durs).transpose(1, 2), durs.sum(-1)
-        out = self.predictor(x)
+        if is_mask:
+            mask = get_mask_from_lengths(x_len)
+        else:
+            mask = None
+        out = self.predictor(x, mask)
         uv = self.sil_proj(out).squeeze(1)
         value = self.body_proj(out).squeeze(1)
 
@@ -92,14 +100,17 @@ class TalkNet2(nn.Module):
         self.generator = QuartzNet9x5(embed_dim, odim)
 
 
-    def forward(self, text, durs, f0):
+    def forward(self, text, durs, f0, is_mask=True):
         x, x_len = self.embed(text, durs).transpose(1, 2), durs.sum(-1)
         f0, f0_mask = f0.clone(), f0 > 0.0
         f0 = self.norm_f0(f0.unsqueeze(1), f0_mask)
         f0[~f0_mask.unsqueeze(1)] = 0.0
         x = self.res_f0(x, f0)
-
-        return self.generator(x)
+        if is_mask:
+            mask = get_mask_from_lengths(x_len)
+        else:
+            mask = None
+        return self.generator(x, mask)
 
     @staticmethod
     def _metrics(true_mel, true_mel_len, pred_mel):

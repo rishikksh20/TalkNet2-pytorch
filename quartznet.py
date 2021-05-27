@@ -20,7 +20,9 @@ class SepConv1d(torch.nn.Module):
         self.pointwise = nn.Conv1d(in_channels, out_channels, kernel_size=1)
         self.bn = nn.BatchNorm1d(out_channels)
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
+        if mask is not None:
+            x = x * mask.unsqueeze(1).to(device=x.device)
         x = self.depthwise(x)
         x = self.pointwise(x)
         return self.bn(x)
@@ -37,9 +39,33 @@ class ConvBN1d(torch.nn.Module):
           nn.Dropout(0.1)
       )
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
+        if mask is not None:
+            x = x * mask.unsqueeze(1).to(device=x.device)
+        return self.conv(x), mask
 
-        return self.conv(x)
+class ActSepConv1d(nn.Module):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 kernel_size,
+                 stride=1,
+                 dilation=1,
+                 dropout=0.1,):
+        super(ActSepConv1d, self).__init__()
+        self.model = nn.Sequential(
+            nn.Dropout(dropout),
+            nn.ReLU(),
+            SepConv1d(in_channels, out_channels, kernel_size, stride, dilation)
+        )
+
+    def forward(self, x, mask=None):
+
+        if mask is not None:
+            x = x * mask.unsqueeze(1).to(device=x.device)
+        x = self.model(x)
+        return x, mask
+
 
 
 class QuartzNetBlock(nn.Module):
@@ -50,9 +76,7 @@ class QuartzNetBlock(nn.Module):
         model = [SepConv1d(in_channels, out_channels, kernel_size, stride)]
 
         for i in range(R - 1):
-            model += [nn.Dropout(0.1)]
-            model += [nn.ReLU()]
-            model += [SepConv1d(out_channels, out_channels, kernel_size, stride)]
+            model += [ActSepConv1d(out_channels, out_channels, kernel_size, stride)]
 
         self.model = nn.Sequential(*model)
 
@@ -61,15 +85,16 @@ class QuartzNetBlock(nn.Module):
             nn.BatchNorm1d(out_channels)
         )
 
-    def forward(self, x):
-        x = self.residual(x) + self.model(x)
+    def forward(self, x, mask=None):
+        x = x * mask.unsqueeze(1).to(device=x.device) if mask is not None else x
+        x = self.residual(x) + self.model(x, mask)
 
-        return F.relu(x)
+        return F.relu(x), mask
 
 
 class QuartzNet5x5(nn.Module):
 
-    def __init__(self, idim, odim, qdim=256, kernels=[5, 7, 9, 11, 13], padding_idx=0):
+    def __init__(self, idim, odim, qdim=256, kernels=[5, 7, 9, 11, 13]):
         super(QuartzNet5x5, self).__init__()
 
 
@@ -94,11 +119,11 @@ class QuartzNet5x5(nn.Module):
             nn.Conv1d(qdim * 2, odim, 1)
         )
 
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.quartznet(x)
-        x = self.conv2(x)
-        x = self.conv3(x)
+    def forward(self, x, mask=None):
+        x = self.conv1(x, mask)
+        x = self.quartznet(x, mask)
+        x = self.conv2(x, mask)
+        x = self.conv3(x, mask)
         return x
 
 class QuartzNet9x5(nn.Module):
@@ -133,11 +158,11 @@ class QuartzNet9x5(nn.Module):
             nn.Conv1d(n * 2, odim, 1)
         )
 
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.quartznet(x)
-        x = self.conv2(x)
-        x = self.conv3(x)
+    def forward(self, x, mask=None):
+        x = self.conv1(x, mask)
+        x = self.quartznet(x, mask)
+        x = self.conv2(x, mask)
+        x = self.conv3(x, mask)
         return x
 
 
